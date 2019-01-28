@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<title>Welcome</title>
+
+<style type="text/css">                                                                                                               /* --- CSS Configuration (Comments to right) --- */
+html,body {
+    width: 100%; height: 100%; margin: 0; padding: 0;
+    overflow: hidden; background: rgb(58, 7, 43);                                                                                              /* Html/body background */
+}
+
+ul, li { margin: 0; padding: 0; }
+*:focus { outline: none; }
+
+#menu, #q, #rss {
+    font-family: monospace; font-size: 11pt;                                                                                             /* Font menu,  */
+    background: #1212122f; color: #aaaaaa;                                                                                                /* Menu background & color */
+}
+
+#wallpaper {
+    display: block; /* none | block */ background: url("images/main.jpg");      /* Wallpaper */
+    background-repeat: no-repeat; background-size: cover; background-position: center;
+    position: fixed; top: 0; left: 0; z-index: 1;
+    width: 100%; height: 100%;
+}
+
+#menu a, #menu a:link, #menu a:visited { color: #aaaaaa; text-decoration: none; cursor: pointer; text-transform: capitalize;            /* pointer | default */ }              /* Dropdown link color */
+#menu a:hover, #menu a:active          { color: #cccccc; }                                                                              /* Active dropdown link color */
+
+#menu {
+    position: fixed; top: 0; left: 0; z-index: 11;
+    width: 100%; cursor: default;
+    height: 32px; line-height: 32px;                                                                                                    /* Menu height */
+}
+    #menu ul               { display: inline-table; position: relative; list-style: none; }
+    #menu label            { padding: 0 10px; }                                                                                         /* Menu title padding */
+
+    #menu ul li            { float: left; }
+    #menu ul li:hover      { background: rgb(0, 0, 0); color: #aaaaaa; }                                                                     /* Active menu title background & color */
+    #menu ul li:hover > ul { display: block; }
+    #menu ul li a          { display: block; white-space: nowrap; padding: 0 10px; }                                                    /* Dropdown link padding */
+
+    #menu ul ul            { width: 100px; position: absolute; top: 100%; display: none; background: #1212122f; }                         /* Dropdown background */
+    #menu ul ul li         { width: 100%; }
+    #menu ul ul li:hover   { background: rgb(83, 11, 39); }                                                                                     /* Active dropdown link background */
+
+
+</style>
+
+<script type="text/javascript" language="javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript" language="javascript">
+var $=function(id) { return document.getElementById(id); }
+
+
+// + ------------------------------------ Settings (JS) - BEGIN ------------------------------------ +
+
+
+var FPS       = 100;                                                                                                                    // Animation speed
+var STEP      = 2.0;                                                                                                                    // Animation steps (px)
+
+
+
+
+var menus=[ // Menu Titles ["Title", width(px)],
+    ["Code",            280],                                                                                                            // menu-1
+    ["Learn",           280],                                                                                                            // menu-2
+    ["Python",          280],                                                                                                            // menu-3
+    ["Csharp",          280],                                                                                                            // menu-4
+    ["Daily",           280],                                                                                                            // menu-5
+
+
+];
+
+// Link setup (separate with ["", ""],)
+// Format: ["Name", "URL"],
+var links=[
+    // Programming Challanges menu 1
+    ["Dailyprogrammer",                 "https://www.reddit.com/r/dailyprogrammer"],
+    ["Projecteuler",                    "https://projecteuler.net/"],
+    ["Codechef",                        "https://www.codechef.com/"],
+    ["Codewars",                        "http://www.codewars.com/"],
+    ["Codingame",                       "https://www.codingame.com/start"],
+    ["Codecombat",                      "https://codecombat.com/play"],
+    ["Codeabbey",                       "http://www.codeabbey.com/"],
+    ["Hackerrank",                      "https://www.hackerrank.com/domains?h_r=logo"],
+    ["Codingbat",                       "http://www.codingbat.com/"],
+    ["Kattis",                          "https://open.kattis.com"],
+    ["Leetcode",                        "https://www.leetcode.com"],
+    ["Topcoder",                        "https://www.topcoder.com"],
+    ["Codeforces",                      "http://codeforces.com"],
+    ["Programmr",                       "http://www.programmr.com/exercises"],
+    ["Coderbyte",                       "https://coderbyte.com/challenges/"],
+    ["Timusonlinejudge",                "http://acm.timus.ru/problemset.aspx"],
+    ["Hackerearth",                     "https://www.hackerearth.com/practice/"],
+    ["Projects",                        "https://github.com/karan/Projects"],
+    ["Haskellprob",                     "https://wiki.haskell.org/H-99:_Ninety-Nine_Haskell_Problems"],
+    ["Edabit",                          "https://edabit.com"],
+    ["ProjectLovelace",                 "https://projectlovelace.net"],
+
+    ["",                                ""],
+
+    // Course -  menu 2
+    ["coursera",                        "https://www.coursera.org/"],
+    ["edx",                             "https://www.edx.org/"],
+    ["udacity",                         "https://www.udacity.com/"],
+    ["HowToBeAProgrammer",              "https://github.com/braydie/HowToBeAProgrammer"],
+    ["khanacademy",                     "https://www.khanacademy.org/"],
+    ["freecodecamp",                    "https://www.freecodecamp.com/"],
+    ["theodinproject",                  "http://www.theodinproject.com/"],
+    ["data-science",                    "https://academy.microsoft.com/en-us/professional-program/data-science"],
+    ["mva",                             "https://mva.microsoft.com/"],
+    ["pluralsight",                     "https://app.pluralsight.com/library/"],
+    ["wintellectnow",                   "https://wintellectnow.com/User"],
+    ["futurelearn",                     "https://www.futurelearn.com"],
+    ["teachcs",                         "https://teachyourselfcs.com"],
+    ["ossu",                            "https://github.com/ossu/computer-science"],
+
+    ["",                                ""],
+    
+    //Python menu 3
+    ["python-course",                   "http://www.karsdorp.io/python-course/"],
+    ["learnpythonthehardway",           "https://learnpythonthehardway.org/book/"],
+    ["pythontutor",                     "http://www.pythontutor.com"],
+    ["bigdatauniversity",               "https://bigdatauniversity.com"],
+    ["askpython",                       "http://askpython.com"],
+    ["inventwithpython",                "https://inventwithpython.com"],
+    ["thinkpython",                     "http://greenteapress.com/thinkpython/html/index.html"],
+    ["cscircles",                       "http://cscircles.cemc.uwaterloo.ca"],
+    ["thinkcomplexity",                 "http://greenteapress.com/complexity/html/thinkcomplexity001.html#toc1"],
+    ["planetpython",                    "http://planetpython.org"],
+    ["google_python",                   "https://developers.google.com/edu/python/"],
+    ["object python",                   "https://jeffknupp.com/blog/2014/06/18/improve-your-python-python-classes-and-object-oriented-programming/"],
+    ["hitchhikerspython",               "http://docs.python-guide.org/en/latest/"],
+    ["cmu",                             "http://oli.cmu.edu"],
+
+    ["",                                ""],
+
+    // Csharp menu 4
+    ["bestplace",                           "https://www.reddit.com/r/learnprogramming/comments/18it9q/best_place_to_learn_c/"],
+    ["200things",                           "https://csharp.2000things.com/index/"],
+    ["dreamincode",                         "http://www.dreamincode.net/forums/topic/218000-learning-c%23-series-new-to-c%23-start-here/"],
+    ["dotnetcurry",                         "http://www.dotnetcurry.com/csharp/1280/test-your-csharp-basics"],
+    ["tutorialspoint",                      "http://www.tutorialspoint.com/csharp/index.htm"],
+    ["codeproject",                         "https://www.codeproject.com"],
+
+    ["",                                ""],
+
+    // Daily - menu 5
+    ["inoreader",                       "http://www.inoreader.com/"],
+    ["habitica",                        "https://habitica.com/#/tasks"],
+    ["reddit",                          "https://www.reddit.com/"],
+    ["steemit",                         "https://steemit.com/trending"],
+    ["hubski",                          "https://hubski.com"],
+    ["voat",                            "https://voat.co"],
+    ["podcast",                         "https://www.podparadise.com"],
+    ["openculture",                     "http://www.openculture.com"],
+
+    ["",                                ""],
+
+    
+
+];
+
+// + ------------------------------------- Settings (JS) - END ------------------------------------- +
+
+
+var ss="";
+function init() { // Initialize
+
+    build();
+
+
+    $('q').value="";
+    $('q').focus();
+}
+
+function build() { // Build menus
+    $('mnu').innerHTML="";
+
+    for(var i=0;i<menus.length;i++) { // Menu titles
+        $('mnu').innerHTML+="<li><label>"+menus[i][0]+"</label>\n<ul id=\"mnu_"+(i+1)+"\"></ul></li>";
+        $('mnu_'+(i+1)).style.width=menus[i][1]+"px";
+    }
+
+    var m=1,skip=false;
+    for(var i=0;i<links.length;i++) { // Menu links
+        if(links[i][0]=="" && links[i][1]=="") { skip=true; }
+
+        if(!skip) { $('mnu_'+m).innerHTML+="<li><a href=\""+links[i][1]+"\" target=\"_self\">"+links[i][0]+"</a></li>"; }
+        else      { skip=false; m++; }
+    }
+}
+
+var w=0,pos=0.0,pause=false,t;
+
+</script>
+</head>
+<body onload="javascript:init();">
+
+
+<div id="menu">
+    <ul id="mnu"></ul>
+</div>
+
+<div id="wallpaper"></div>
+
+</body>
+</html>
