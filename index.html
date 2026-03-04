@@ -320,7 +320,7 @@
     .notes-status { color: var(--green-dim); }
     .notes-hint   { color: var(--muted); }
 
-    ::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--green-muted); }
   </style>
@@ -499,6 +499,7 @@ function scrollBottom() {
 const COMMANDS = {
   help() {
     const lines = [
+      ['g <query>',    'search on google'],
       ['add',          'add a new bookmark'],
       ['rm <alias>',   'remove a bookmark'],
       ['ls',           'list all bookmarks'],
@@ -509,6 +510,13 @@ const COMMANDS = {
     lines.forEach(([cmd, desc]) => {
       log(`  ${cmd.padEnd(18)} ${desc}`, 'info');
     });
+  },
+
+  g(args) {
+    const q = args.join(' ');
+    if (!q) { log('usage: g <query>', 'err'); return; }
+    window.open('https://www.google.com/search?q=' + encodeURIComponent(q), '_blank');
+    log(`searching: ${q}`, 'ok');
   },
 
   add() { openModal(); },
