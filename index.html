@@ -103,6 +103,63 @@
       letter-spacing: 0.05em;
     }
 
+    /* ── Category groups ── */
+    .cat-group { margin-bottom: 12px; }
+
+    .cat-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      padding: 2px 0;
+      margin-bottom: 4px;
+    }
+
+    .cat-header:hover .cat-name { color: var(--green); }
+
+    .cat-toggle {
+      color: var(--green-dim);
+      font-size: 10px;
+      width: 10px;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+
+    .cat-header.collapsed .cat-toggle {
+      transform: rotate(-90deg);
+    }
+
+    .cat-name {
+      color: var(--amber);
+      font-size: 12px;
+      transition: color 0.15s;
+    }
+
+    .cat-line {
+      color: var(--border);
+      flex: 1;
+      font-size: 12px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .cat-count {
+      color: var(--muted);
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .cat-body {
+      overflow: hidden;
+      max-height: 2000px;
+      transition: max-height 0.25s ease;
+    }
+
+    .cat-body.collapsed {
+      max-height: 0;
+    }
+
     /* ── Site list ── */
     .site-list {
       display: flex;
@@ -391,6 +448,10 @@
         <label>url</label>
         <input type="url" id="m-url" placeholder="https://github.com" />
       </div>
+      <div class="modal-field">
+        <label>category</label>
+        <input type="text" id="m-cat" placeholder="general" />
+      </div>
     </div>
     <div class="modal-actions">
       <button class="mbtn cancel" onclick="closeModal()">cancel</button>
@@ -422,12 +483,12 @@ document.getElementById('boot-info').textContent =
 
 // ── Storage ────────────────────────────────────────────────────
 const DEFAULT = [
-  { alias: 'github',   url: 'https://github.com' },
-  { alias: 'youtube',  url: 'https://youtube.com' },
-  { alias: 'chatgpt',  url: 'https://chatgpt.com' },
-  { alias: 'twitter',  url: 'https://x.com' },
-  { alias: 'reddit',   url: 'https://reddit.com' },
-  { alias: 'claude',   url: 'https://claude.ai' },
+  { alias: 'github',   url: 'https://github.com',  category: 'dev' },
+  { alias: 'claude',   url: 'https://claude.ai',   category: 'dev' },
+  { alias: 'chatgpt',  url: 'https://chatgpt.com', category: 'dev' },
+  { alias: 'youtube',  url: 'https://youtube.com', category: 'social' },
+  { alias: 'twitter',  url: 'https://x.com',       category: 'social' },
+  { alias: 'reddit',   url: 'https://reddit.com',  category: 'social' },
 ];
 
 function load() {
@@ -439,6 +500,15 @@ function load() {
 
 function save(data) { localStorage.setItem('hp_bookmarks', JSON.stringify(data)); }
 
+function loadCollapsed() {
+  try { return new Set(JSON.parse(localStorage.getItem('hp_collapsed') || '[]')); }
+  catch { return new Set(); }
+}
+
+function saveCollapsed(set) {
+  localStorage.setItem('hp_collapsed', JSON.stringify([...set]));
+}
+
 // ── Render bookmarks ───────────────────────────────────────────
 function render() {
   const data = load();
@@ -449,18 +519,75 @@ function render() {
   if (data.length === 0) { empty.style.display = ''; return; }
   empty.style.display = 'none';
 
+  const collapsed = loadCollapsed();
+
+  // group by category (preserve insertion order)
+  const groups = {};
   data.forEach((item, i) => {
-    const row = document.createElement('div');
-    row.className = 'site-row';
-    row.innerHTML = `
-      <span class="alias">${esc(item.alias)}</span>
-      <span class="arrow">→</span>
-      <a href="${esc(item.url)}" target="_blank" rel="noopener">${esc(item.url)}</a>
-      <button class="del-btn" onclick="deleteSite(${i})" title="rm">✕</button>
+    const cat = item.category || 'general';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push({ ...item, _idx: i });
+  });
+
+  Object.entries(groups).forEach(([cat, items]) => {
+    const isCollapsed = collapsed.has(cat);
+
+    const group = document.createElement('div');
+    group.className = 'cat-group';
+
+    const header = document.createElement('div');
+    header.className = 'cat-header' + (isCollapsed ? ' collapsed' : '');
+    header.innerHTML = `
+      <span class="cat-toggle">▼</span>
+      <span class="cat-name">[${esc(cat)}]</span>
+      <span class="cat-line">${'─'.repeat(40)}</span>
+      <span class="cat-count">${items.length}</span>
     `;
-    list.appendChild(row);
+    header.addEventListener('click', () => toggleCat(cat));
+
+    const body = document.createElement('div');
+    body.className = 'cat-body' + (isCollapsed ? ' collapsed' : '');
+    body.id = 'cat-' + cat;
+
+    const siteList = document.createElement('div');
+    siteList.className = 'site-list';
+
+    items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'site-row';
+      row.innerHTML = `
+        <span class="alias">${esc(item.alias)}</span>
+        <span class="arrow">→</span>
+        <a href="${esc(item.url)}" target="_blank" rel="noopener">${esc(item.url)}</a>
+        <button class="del-btn" onclick="deleteSite(${item._idx})" title="rm">✕</button>
+      `;
+      siteList.appendChild(row);
+    });
+
+    body.appendChild(siteList);
+    group.appendChild(header);
+    group.appendChild(body);
+    list.appendChild(group);
   });
 }
+
+window.toggleCat = function(cat) {
+  const collapsed = loadCollapsed();
+  const header = document.querySelector(`.cat-header[data-cat="${cat}"]`) ||
+    [...document.querySelectorAll('.cat-header')].find(h => h.querySelector('.cat-name').textContent === `[${cat}]`);
+  const body = document.getElementById('cat-' + cat);
+
+  if (collapsed.has(cat)) {
+    collapsed.delete(cat);
+    header && header.classList.remove('collapsed');
+    body && body.classList.remove('collapsed');
+  } else {
+    collapsed.add(cat);
+    header && header.classList.add('collapsed');
+    body && body.classList.add('collapsed');
+  }
+  saveCollapsed(collapsed);
+};
 
 function esc(s) {
   return String(s)
@@ -599,6 +726,7 @@ input.addEventListener('keydown', function(e) {
 window.openModal = function() {
   document.getElementById('m-alias').value = '';
   document.getElementById('m-url').value = '';
+  document.getElementById('m-cat').value = '';
   document.getElementById('modal').classList.add('open');
   document.getElementById('m-alias').focus();
 };
@@ -611,24 +739,26 @@ window.closeModal = function() {
 window.addSite = function() {
   const alias = document.getElementById('m-alias').value.trim().replace(/\s+/g,'-').toLowerCase();
   let url = document.getElementById('m-url').value.trim();
+  const category = document.getElementById('m-cat').value.trim().replace(/\s+/g,'-').toLowerCase() || 'general';
   if (!alias || !url) return;
   if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
   const data = load();
-  data.push({ alias, url });
+  data.push({ alias, url, category });
   save(data);
   render();
   closeModal();
-  log(`added: ${alias} → ${url}`, 'ok');
+  log(`added: ${alias} → ${url} [${category}]`, 'ok');
 };
 
 document.getElementById('modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
-['m-alias','m-url'].forEach(id => {
+['m-alias','m-url','m-cat'].forEach(id => {
   document.getElementById(id).addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       if (id === 'm-alias') document.getElementById('m-url').focus();
+      else if (id === 'm-url') document.getElementById('m-cat').focus();
       else addSite();
     }
     if (e.key === 'Escape') closeModal();
