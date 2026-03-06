@@ -393,6 +393,9 @@
   <div class="titlebar-text">lemmyhemmingway@home: ~/homepage</div>
 </div>
 
+<canvas id="pixel-char" width="72" height="42"
+  style="image-rendering: pixelated; display: block; position: fixed; bottom: 20px; right: 24px; z-index: 10; opacity: 0.85;"></canvas>
+
 <div class="terminal" id="terminal">
 
   <!-- ASCII header -->
@@ -793,6 +796,116 @@ notesArea.addEventListener('keydown', e => {
   // Escape returns focus to command input
   if (e.key === 'Escape') { input.focus(); }
 });
+
+// ── Pixel character animation ───────────────────────────────────
+(function() {
+  const canvas = document.getElementById('pixel-char');
+  const ctx = canvas.getContext('2d');
+  const P = 3; // screen pixels per game pixel
+
+  // palette
+  const SKN = '#ffcc88'; // skin
+  const HAI = '#2a1500'; // hair / dark outline
+  const SHT = '#2a5fa0'; // shirt
+  const DSK = '#6b4f28'; // desk
+  const MNF = '#5a5a6e'; // monitor frame
+  const SCR = '#001206'; // screen bg
+  const SCG = '#00cc55'; // screen glow
+  const TBG = '#dde0f4'; // thought bubble bg
+  const TBD = '#8888bb'; // thought bubble border
+  const DOT = '#2233cc'; // thought bubble dots
+
+  function px(x, y, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(x * P, y * P, P, P);
+  }
+
+  let frame = 0;
+  let blinkTimer = 0;
+  let nextBlink = 80 + Math.floor(Math.random() * 100);
+  let isBlinking = false;
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // thought bubble phase: 0 dots → 1 → 2 → 3 → pause → repeat
+    const phase    = Math.floor(frame / 22) % 5;
+    const dotCount = phase <= 3 ? phase : 0;
+
+    // ── Thought bubble (rows 0-4, cols 1-9) ──────────────────
+    for (let x = 2; x <= 8; x++) { px(x, 0, TBD); px(x, 4, TBD); }
+    px(1, 1, TBD); px(1, 2, TBD); px(1, 3, TBD);
+    px(9, 1, TBD); px(9, 2, TBD); px(9, 3, TBD);
+    for (let y = 1; y <= 3; y++)
+      for (let x = 2; x <= 8; x++)
+        px(x, y, TBG);
+    if (dotCount >= 1) px(3, 2, DOT);
+    if (dotCount >= 2) px(5, 2, DOT);
+    if (dotCount >= 3) px(7, 2, DOT);
+
+    // tail
+    px(4, 5, TBD);
+    px(4, 6, TBD);
+
+    // ── Head (rows 7-10, cols 2-7) ───────────────────────────
+    for (let x = 3; x <= 6; x++) px(x, 7, HAI); // hair top
+    for (let y = 8; y <= 9; y++) {
+      px(2, y, HAI);
+      for (let x = 3; x <= 6; x++) px(x, y, SKN);
+      px(7, y, HAI);
+    }
+    // eyes
+    if (!isBlinking) {
+      px(3, 8, HAI); px(6, 8, HAI);
+    } else {
+      px(3, 8, HAI); px(4, 8, HAI); // closed left
+      px(5, 8, HAI); px(6, 8, HAI); // closed right
+    }
+    // mouth
+    px(4, 9, HAI); px(5, 9, HAI);
+    // chin / hair bottom
+    for (let x = 2; x <= 7; x++) px(x, 10, HAI);
+
+    // ── Body (rows 11-12, cols 3-6) ──────────────────────────
+    for (let y = 11; y <= 12; y++)
+      for (let x = 3; x <= 6; x++)
+        px(x, y, SHT);
+
+    // arm stretching right (row 12, cols 7-11)
+    for (let x = 7; x <= 11; x++) px(x, 12, SKN);
+
+    // ── Monitor (rows 6-10, cols 13-21) ──────────────────────
+    for (let x = 13; x <= 21; x++) { px(x, 6, MNF); px(x, 10, MNF); }
+    for (let y = 6; y <= 10; y++)   { px(13, y, MNF); px(21, y, MNF); }
+    // screen fill
+    for (let y = 7; y <= 9; y++)
+      for (let x = 14; x <= 20; x++)
+        px(x, y, SCR);
+    // screen content
+    px(15, 7, SCG); px(16, 7, SCG); px(17, 7, SCG); px(18, 7, SCG);
+    px(15, 8, SCG); px(16, 8, SCG); px(17, 8, SCG);
+    if (frame % 55 < 38) px(15, 9, SCG); // blinking cursor
+    // monitor stand
+    px(17, 11, MNF); px(17, 12, MNF);
+
+    // ── Desk (row 13, full width) ─────────────────────────────
+    for (let x = 0; x <= 23; x++) px(x, 13, DSK);
+
+    // ── Blink logic ───────────────────────────────────────────
+    blinkTimer++;
+    if (!isBlinking && blinkTimer >= nextBlink) {
+      isBlinking = true; blinkTimer = 0;
+    } else if (isBlinking && blinkTimer >= 4) {
+      isBlinking = false; blinkTimer = 0;
+      nextBlink = 80 + Math.floor(Math.random() * 100);
+    }
+
+    frame++;
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+})();
 
 // ── Init ───────────────────────────────────────────────────────
 render();
